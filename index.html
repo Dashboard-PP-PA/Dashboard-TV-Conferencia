@@ -76,7 +76,6 @@
   <script>
     const FOLDER_ID = '1_GdmBNJhnCBlZEov1slP0rL5gUHaESZ1'; // ID da pasta no Google Drive
     const API_KEY = 'AIzaSyBT_UvwH2mg-QtCGEkqkAFxlV4dfjMRHgw'; // Sua chave de API
-    let videoPlayer; // Variável para controlar o player do vídeo
 
     const carouselImages = document.getElementById('carousel-images');
     const errorMessage = document.getElementById('error-message');
@@ -102,7 +101,7 @@
 
             // Se for uma imagem
             if (mimeType.startsWith('image/')) {
-              const imageUrl = `https://lh3.googleusercontent.com/d/${file.id}=s1080`;
+              const imageUrl = `https://drive.google.com/uc?export=view&id=${file.id}`;
               const img = document.createElement('img');
               img.src = imageUrl;
               img.alt = file.name;
@@ -121,10 +120,10 @@
             // Se for um vídeo
             else if (mimeType.startsWith('video/')) {
               const videoUrl = `https://drive.google.com/file/d/${file.id}/preview`;
-              const iframe = document.createElement('iframe'); // Usando <iframe>
+              const iframe = document.createElement('iframe');
               iframe.src = videoUrl;
-              iframe.allow = "autoplay"; // Permitir autoplay
-              iframe.frameBorder = "0"; // Remove a borda do iframe
+              iframe.allow = "autoplay";
+              iframe.frameBorder = "0"; 
               iframe.style.width = "100%";
               iframe.style.height = "100%";
               iframe.style.opacity = "0"; // Inicialmente invisível
@@ -135,11 +134,6 @@
               };
 
               slide.appendChild(iframe);
-
-              // Tentar iniciar o vídeo automaticamente
-              setTimeout(() => {
-                iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-              }, 1000);
             }
 
             carouselImages.appendChild(slide);
@@ -172,13 +166,6 @@
 
     // Chamar a função para carregar as imagens e vídeos
     fetchGoogleDriveFiles();
-
-    // Adicionar um timer para garantir que o autoplay funcione corretamente
-    setInterval(() => {
-      if (swiper.slides.length > 0 && !swiper.autoplay.running) { // Verifica se há slides e se o autoplay está pausado
-        swiper.slideNext(); // Muda para o próximo slide
-      }
-    }, 20000); // Troca a cada 20 segundos, se autoplay estiver ativo
 
     // Atualizar a página a cada 2 minutos (120.000 milissegundos)
     setTimeout(() => {
