@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DASHBOARD CONFERENCIA</title>
+  <title>DASHBOARD SEPARACAO</title>
   <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
   <style>
     html, body {
@@ -15,7 +15,7 @@
 
     .swiper-container {
       width: 100%;
-      height: 100vh;
+      height: 100vh; /* Ajuste para ocupar toda a altura da viewport */
     }
 
     .swiper-slide {
@@ -24,9 +24,9 @@
       align-items: center;
     }
 
-    .swiper-slide img, .swiper-slide iframe {
-      width: 90vw;
-      height: 90vh;
+    .swiper-slide img {
+      width: 90vw;  /* Ocupa 90% da largura da viewport */
+      height: 90vh; /* Ocupa 90% da altura da viewport */
       object-fit: contain;
       opacity: 0;
       transition: opacity 0.5s ease-in;
@@ -44,24 +44,17 @@
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 
-    /* Estilo para mensagem de erro */
-    .error-message {
-      color: red;
-      text-align: center;
-      margin: 20px;
-      display: none; /* Escondido por padrão */
+    .upload-form input[type="file"] {
+      margin-right: 10px;
     }
   </style>
 </head>
 <body>
   
-  <!-- Mensagem de Erro -->
-  <div class="error-message" id="error-message">Erro ao carregar imagens. Tente novamente mais tarde.</div>
-
-  <!-- Carrossel de Imagens e Vídeos -->
+  <!-- Carrossel de Imagens -->
   <div class="swiper-container">
     <div class="swiper-wrapper" id="carousel-images">
-      <!-- Imagens e vídeos serão inseridos dinamicamente -->
+      <!-- Imagens serão inseridas dinamicamente -->
     </div>
 
     <!-- Add Arrows -->
@@ -70,94 +63,56 @@
   </div>
 
   <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-  <!-- API do YouTube Player -->
-  <script src="https://www.youtube.com/iframe_api"></script>
-
   <script>
     const FOLDER_ID = '1_GdmBNJhnCBlZEov1slP0rL5gUHaESZ1'; // ID da pasta no Google Drive
     const API_KEY = 'AIzaSyBT_UvwH2mg-QtCGEkqkAFxlV4dfjMRHgw'; // Sua chave de API
-    let videoPlayer; // Variável para controlar o player do vídeo
 
     const carouselImages = document.getElementById('carousel-images');
-    const errorMessage = document.getElementById('error-message');
 
-    // Função para buscar imagens e vídeos da API do Google Drive
-    async function fetchGoogleDriveFiles() {
+    // Função para buscar imagens da API do Google Drive
+    async function fetchGoogleDriveImages() {
       const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents&key=${API_KEY}&fields=files(id,name,mimeType)`;
       
       try {
         const response = await fetch(url);
         const data = await response.json();
-
-        if (data.files && data.files.length > 0) {
-          // Limpar o carrossel antes de carregar novos arquivos
+        
+        if (data.files) {
+          // Limpar o carrossel antes de carregar novas imagens
           carouselImages.innerHTML = '';
-          errorMessage.style.display = 'none'; // Esconder a mensagem de erro
 
           data.files.forEach(file => {
-            const mimeType = file.mimeType;
-
-            const slide = document.createElement('div');
-            slide.classList.add('swiper-slide');
-
-            // Se for uma imagem
-            if (mimeType.startsWith('image/')) {
+            // Verifica se o arquivo é uma imagem
+            if (file.mimeType.startsWith('image/')) {
               const imageUrl = `https://lh3.googleusercontent.com/d/${file.id}=s1080`;
+
+              
+              const slide = document.createElement('div');
+              slide.classList.add('swiper-slide');
+              
               const img = document.createElement('img');
               img.src = imageUrl;
               img.alt = file.name;
 
+              // Adiciona um evento 'onload' para garantir que a imagem carregue completamente
               img.onload = () => {
                 img.style.opacity = '1'; // Exibe a imagem após o carregamento
               };
               
-              img.onerror = () => {
-                console.error('Erro ao carregar imagem:', imageUrl);
-                img.src = ''; // Limpa a imagem se houver erro
-              };
-
               slide.appendChild(img);
+              carouselImages.appendChild(slide);
             }
-            // Se for um vídeo
-            else if (mimeType.startsWith('video/')) {
-              const videoUrl = `https://drive.google.com/file/d/${file.id}/preview`;
-              const iframe = document.createElement('iframe'); // Usando <iframe>
-              iframe.src = videoUrl;
-              iframe.allow = "autoplay"; // Permitir autoplay
-              iframe.frameBorder = "0"; // Remove a borda do iframe
-              iframe.style.width = "100%";
-              iframe.style.height = "100%";
-              iframe.style.opacity = "0"; // Inicialmente invisível
-
-              // Exibir o iframe após o carregamento
-              iframe.onload = () => {
-                iframe.style.opacity = '1';
-              };
-
-              slide.appendChild(iframe);
-
-              // Tentar iniciar o vídeo automaticamente
-              setTimeout(() => {
-                iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-              }, 1000);
-            }
-
-            carouselImages.appendChild(slide);
           });
 
-          // Atualiza o carrossel para os novos arquivos
+          // Atualiza o carrossel para as novas imagens
           swiper.update();
-        } else {
-          // Se não houver arquivos, mostrar mensagem de erro
-          errorMessage.style.display = 'block';
         }
       } catch (error) {
-        console.error('Erro ao buscar arquivos:', error);
-        errorMessage.style.display = 'block'; // Mostrar mensagem de erro
+        console.error('Erro ao buscar imagens:', error);
       }
     }
 
-    // Inicialização do carrossel Swiper com autoplay para mudar os slides a cada 20 segundos
+    // Inicialização do carrossel Swiper com autoplay para mudar as imagens a cada 30 segundos
     const swiper = new Swiper('.swiper-container', {
       loop: true,
       navigation: {
@@ -165,25 +120,18 @@
         prevEl: '.swiper-button-prev',
       },
       autoplay: {
-        delay: 20000, // 20 segundos
+        delay: 10000, // 30 segundos
         disableOnInteraction: false, // Continuar o autoplay mesmo após interação
       },
     });
 
-    // Chamar a função para carregar as imagens e vídeos
-    fetchGoogleDriveFiles();
+    // Chamar a função para carregar as imagens
+    fetchGoogleDriveImages();
 
-    // Adicionar um timer para garantir que o autoplay funcione corretamente
-    setInterval(() => {
-      if (swiper.slides.length > 0 && !swiper.autoplay.running) { // Verifica se há slides e se o autoplay está pausado
-        swiper.slideNext(); // Muda para o próximo slide
-      }
-    }, 20000); // Troca a cada 20 segundos, se autoplay estiver ativo
-
-    // Atualizar a página a cada 2 minutos (120.000 milissegundos)
-    setTimeout(() => {
-      window.location.reload();
-    }, 120000);
+    // Função para recarregar a página a cada 2 minutos e 30 segundos (150000 milissegundos)
+    setTimeout(function() {
+      location.reload();
+    }, 150000); // 150000 milissegundos = 2 minutos e 30 segundos
   </script>
 </body>
 </html>
