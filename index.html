@@ -15,7 +15,7 @@
 
     .swiper-container {
       width: 100%;
-      height: 100vh; /* Ajuste para ocupar toda a altura da viewport */
+      height: 100vh;
     }
 
     .swiper-slide {
@@ -25,8 +25,8 @@
     }
 
     .swiper-slide img {
-      width: 90vw;  /* Ocupa 90% da largura da viewport */
-      height: 90vh; /* Ocupa 90% da altura da viewport */
+      width: 90vw;
+      height: 90vh;
       object-fit: contain;
       opacity: 0;
       transition: opacity 0.5s ease-in;
@@ -47,10 +47,21 @@
     .upload-form input[type="file"] {
       margin-right: 10px;
     }
+
+    /* Estilo para mensagem de erro */
+    .error-message {
+      color: red;
+      text-align: center;
+      margin: 20px;
+      display: none;
+    }
   </style>
 </head>
 <body>
   
+  <!-- Mensagem de Erro -->
+  <div class="error-message" id="error-message">Erro ao carregar imagens. Tente novamente mais tarde.</div>
+
   <!-- Carrossel de Imagens -->
   <div class="swiper-container">
     <div class="swiper-wrapper" id="carousel-images">
@@ -68,6 +79,7 @@
     const API_KEY = 'AIzaSyBT_UvwH2mg-QtCGEkqkAFxlV4dfjMRHgw'; // Sua chave de API
 
     const carouselImages = document.getElementById('carousel-images');
+    const errorMessage = document.getElementById('error-message');
 
     // Função para buscar imagens da API do Google Drive
     async function fetchGoogleDriveImages() {
@@ -76,17 +88,16 @@
       try {
         const response = await fetch(url);
         const data = await response.json();
-        
-        if (data.files) {
+
+        if (data.files && data.files.length > 0) {
           // Limpar o carrossel antes de carregar novas imagens
           carouselImages.innerHTML = '';
+          errorMessage.style.display = 'none'; // Esconder a mensagem de erro
 
           data.files.forEach(file => {
-            // Verifica se o arquivo é uma imagem
             if (file.mimeType.startsWith('image/')) {
               const imageUrl = `https://lh3.googleusercontent.com/d/${file.id}=s1080`;
 
-              
               const slide = document.createElement('div');
               slide.classList.add('swiper-slide');
               
@@ -94,9 +105,13 @@
               img.src = imageUrl;
               img.alt = file.name;
 
-              // Adiciona um evento 'onload' para garantir que a imagem carregue completamente
               img.onload = () => {
-                img.style.opacity = '1'; // Exibe a imagem após o carregamento
+                img.style.opacity = '1';
+              };
+              
+              img.onerror = () => {
+                console.error('Erro ao carregar imagem:', imageUrl);
+                img.src = '';
               };
               
               slide.appendChild(img);
@@ -104,15 +119,16 @@
             }
           });
 
-          // Atualiza o carrossel para as novas imagens
           swiper.update();
+        } else {
+          errorMessage.style.display = 'block';
         }
       } catch (error) {
         console.error('Erro ao buscar imagens:', error);
+        errorMessage.style.display = 'block';
       }
     }
 
-    // Inicialização do carrossel Swiper com autoplay para mudar as imagens a cada 10 segundos
     const swiper = new Swiper('.swiper-container', {
       loop: true,
       navigation: {
@@ -121,22 +137,29 @@
       },
       autoplay: {
         delay: 10000, // 10 segundos
-        disableOnInteraction: false, // Continuar o autoplay mesmo após interação
+        disableOnInteraction: false,
+      },
+      on: {
+        init: function () {
+          console.log('Swiper inicializado!');
+        },
+        autoplay: function () {
+          console.log('Autoplay acionado!');
+        }
       },
     });
 
-    // Chamar a função para carregar as imagens
+    setInterval(() => {
+      console.log('Avançando slide manualmente.');
+      swiper.slideNext();
+    }, 10000); // 10 segundos
+
     fetchGoogleDriveImages();
 
-    // Reinicializar o autoplay após o reload
-    window.addEventListener('load', function () {
-      swiper.autoplay.start(); // Reinicia o autoplay quando a página for recarregada
-    });
-
-    // Função para recarregar a página a cada 2 minutos e 30 segundos (150000 milissegundos)
-    setTimeout(function() {
+    // Atualizar a página a cada 10 horas
+    setInterval(() => {
       location.reload();
-    }, 36000000); // 10 horas
+    }, 36000000); // 10 horas em milissegundos (10 * 60 * 60 * 1000)
   </script>
 </body>
 </html>
